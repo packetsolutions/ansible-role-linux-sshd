@@ -1,0 +1,124 @@
+# {{ ansible_managed }}
+
+# listening
+Protocol 2
+{% if sshd_daemon_pid is defined %}
+PidFile {{ sshd_daemon_pid | lower }}
+{% endif %}
+{% if sshd_daemon_version is defined %}
+VersionAddendum {{ sshd_daemon_version }}
+{% else %}
+VersionAddendum none
+{% endif %}
+{% if sshd_daemon_banner is defined %}
+Banner {{ sshd_daemon_banner }}
+{% else %}
+Banner none
+{% endif %}
+AddressFamily {{ sshd_address_family }}
+{% for sshd_port in sshd_ports %}
+Port {{ sshd_port }}
+{% endfor %}
+{% if sshd_listen_addresses is defined %}
+{%   for sshd_listen_address in sshd_listen_addresses %}
+ListenAddress {{ sshd_listen_address }}
+{%   endfor %}
+{% endif %}
+
+# keys
+{% for sshd_host_key in sshd_host_keys %}
+HostKey {{ sshd_host_key }}
+{% endfor %}
+{% if sshd_rekey_limit is defined %}
+RekeyLimit {{ sshd_rekey_limit }}
+{% endif %}
+
+# logging
+LogLevel {{ sshd_log_level | upper }}
+SyslogFacility {{ sshd_log_facility | upper }}
+
+# authentication
+LoginGraceTime {{ sshd_login_grace_time }}
+StrictModes {{ sshd_login_strict_mode | lower }}
+PermitRootLogin {{ sshd_login_permit_root | lower }}
+MaxAuthTries {{ sshd_login_tries }}
+MaxSessions {{ sshd_login_sessions }}
+MaxStartups {{ sshd_login_startups }}
+
+AuthorizedKeysFile {{ sshd_login_authorized_keys | join(' ') }}
+{% if sshd_login_authorized_keys_command is defined %}
+AuthorizedKeysCommand {{ sshd_login_authorized_keys_commmand | lower }}
+{% endif %}
+{% if sshd_login_authorized_keys_command_user is defined %}
+AuthorizedKeysCommandUser {{ sshd_login_authorized_keys_command_user | lower }}
+{% endif %}
+{% if sshd_login_host_authentication is defined and sshd_login_host_authentication | lower == 'yes' %}
+HostbasedAuthentication {{ sshd_login_host_authentication | lower }}
+IgnoreUserKnownHosts {{ sshd_login_host_ignore_user_known | lower }}
+IgnoreRhosts {{ sshd_login_host_ignore_rhosts | lower }}
+{% endif %}
+
+# passwords
+PasswordAuthentication {{ sshd_login_password_authentication | lower }}
+{% if sshd_login_password_authentication | lower == 'yes' %}
+PermitEmptyPasswords {{ sshd_login_password_empty | lower }}
+{% endif %}
+UsePAM {{ sshd_login_pam_authentication | lower }}
+ChallengeResponseAuthentication no
+KerberosAuthentication no
+GSSAPIAuthentication no
+{% if sshd_login_deny_users is defined and sshd_login_deny_users %}
+AllowUsers {{ sshd_login_deny_users | join(' ') }}
+{% endif %}
+{% if sshd_login_deny_groups is defined and sshd_login_deny_groups %}
+AllowGroups {{ sshd_login_deny_groups | join(' ') }}
+{% endif %}
+{% if sshd_login_allow_users is defined and sshd_login_allow_users %}
+AllowUsers {{ sshd_login_allow_users | join(' ') }}
+{% endif %}
+{% if sshd_login_allow_groups is defined and sshd_login_allow_groups %}
+AllowGroups {{ sshd_login_allow_groups | join(' ') }}
+{% endif %}
+
+# network
+AllowAgentForwarding {{ sshd_network_forward_agent | lower }}
+AllowTcpForwarding {{ sshd_network_forward_tcp | lower }}
+GatewayPorts {{ sshd_network_gateway_ports | lower }}
+X11Forwarding {{ sshd_network_forward_x11 | lower }}
+{% if sshd_network_forward_x11 is defined and sshd_network_forward_x11 == 'yes' %}
+X11DisplayOffset {{ sshd_network_forward_x11_offset | lower }}
+X11UseLocalhost {{ sshd_network_forward_x11_localhost | lower }}
+{% endif %}
+PermitTTY {{ sshd_network_permit_tty | lower }}
+TCPKeepAlive {{ sshd_network_keepalive_tcp | lower }}
+ClientAliveInterval {{ sshd_network_keepalive_client_interval }}
+ClientAliveInterval {{ sshd_network_keepalive_client_count }}
+Compression {{ sshd_network_compression | lower }}
+UseDNS {{ sshd_network_dns }}
+PermitTunnel {{ sshd_network_tunnel }}
+
+# user
+PrintMotd {{ sshd_user_print_motd | lower }}
+PrintLastLog {{ sshd_user_print_lastlog | lower }}
+UseLogin no
+ChrootDirectory none
+PermitUserEnvironment {{ sshd_user_environment_override | lower }}
+{% if sshd_user_environment_vars is defined and sshd_user_environment_vars %}
+AcceptEnv {{ sshd_user_environment_vars | join(' ') }}
+{% endif %}
+
+# sftp
+{% if sshd_sftp_enable == 'yes' %}
+Subsystem       sftp    /usr/lib/openssh/sftp-server
+{%   if sshd_sftp_chroot_dir is defined %}
+  ChrootDirectory {{ sshd_sftp_chroot_dir }}
+{%   endif %}
+{%   if sshd_sftp_group is defined and sshd_sftp_group %}
+  Match Group {{ sshd_sftp_group }}
+{%   endif %}
+  AllowTcpForwarding no
+  AllowAgentForwarding no
+  PasswordAuthentication no
+  PermitRootLogin no
+  X11Forwarding no
+{% endif %}

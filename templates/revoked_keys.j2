@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+
+{% if sshd_revoked_keys %}
+{%   for key in sshd_revoked_keys %}
+{{key}}
+{%   endfor %}
+{% endif %}

@@ -1,0 +1,27 @@
+---
+- name: 'set os variables'
+  include_vars: '{{ item }}'
+  with_first_found:
+   - '{{ ansible_distribution | lower }}.yml'
+   - '{{ ansible_os_family | lower }}.yml'
+
+- name: 'create revoked_keys and set permissions to root/600'
+  template:
+    src: 'revoked_keys.j2'
+    dest: '/etc/ssh/revoked_keys'
+    mode: '0600'
+    owner: '{{ ssh_owner }}'
+    group: '{{ ssh_group }}'
+  notify: restart sshd
+  when: sshd_revoked_keys is defined
+
+- name: 'create sshd_config and set permissions to root/600'
+  template:
+    src: 'sshd_conf.j2'
+    dest: '/etc/ssh/sshd_config'
+    mode: '0600'
+    owner: '{{ ssh_owner }}'
+    group: '{{ ssh_group }}'
+    validate: '/usr/sbin/sshd -T -f %s'
+  notify: restart sshd
+  become: yes
